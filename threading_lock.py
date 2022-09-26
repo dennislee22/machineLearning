@@ -3,18 +3,18 @@ import threading
 import os
 import time
 
-global_lock = threading.Lock()
+lockme = threading.Lock()
 
-open('zzz', 'w').close()    
+open('output', 'w').close()    
 
 y = 0
 def write_to_file():
-    with open("asd",'r') as fp:
+    with open("readme",'r') as fp:
       x = len(fp.readlines())
-    while global_lock.locked():
-        continue
-    global_lock.acquire()
-    with open("zzz", "a+") as file:
+    while lockme.locked():
+      continue
+    lockme.acquire()
+    with open("output", "a+") as file:
       file.write("current threads:" + str(threading.current_thread()))
       file.write("\n")
       file.write("current pid:" + str(os.getpid()))
@@ -23,16 +23,16 @@ def write_to_file():
       file.write("\n")
       file.write("CPU number:" + str(psutil.Process().cpu_num()))
       file.write("\n")
-      with open("asd",'r') as ok:
+      with open("readme",'r') as ok:
         global y
         y -= 1 
         content = ok.readlines()
-        file.write(content[y])
+        file.write("line " + content[y])
         print(y)
       file.write("\n")
       file.close()
 
-    global_lock.release()
+    lockme.release()
 
 threads = []
 
