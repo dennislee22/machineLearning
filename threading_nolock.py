@@ -3,17 +3,11 @@ import threading
 import os
 import time
 
-#lockme = threading.Lock()
-
 open('output', 'w').close()    
-
-y = 0
+with open("readme",'r') as fp:
+  x = len(fp.readlines())
+y = -1
 def write_to_file():
-    with open("readme",'r') as fp:
-      x = len(fp.readlines())
-    #while lockme.locked():
-    #  continue
-    #lockme.acquire()
     with open("output", "a+") as file:
       file.write("current threads:" + str(threading.current_thread()))
       file.write("\n")
@@ -25,20 +19,18 @@ def write_to_file():
       file.write("\n")
       with open("readme",'r') as ok:
         global y
-        y -= 1 
+        y += 1 
         content = ok.readlines()
         file.write("line " + content[y])
         print(y)
       file.write("\n")
       file.close()
 
-    #lockme.release()
-
 threads = []
 
 start_time = time.perf_counter()
 
-for i in range(1, 21):
+for i in range(1, 11):
     t = threading.Thread(target=write_to_file)
     threads.append(t)
     t.start()
@@ -47,5 +39,3 @@ for i in range(1, 21):
 end_time = time.perf_counter()  
 execution_time = end_time - start_time  
 print(f"\nJob Starts: {start_time}\nJob Ends: {end_time}\nTotals Execution Time:{execution_time:0.2f} seconds.")
-
-
