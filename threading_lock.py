@@ -6,11 +6,11 @@ import time
 lockme = threading.Lock()
 
 open('output', 'w').close()    
-
-y = 0
+with open("readme",'r') as fp:
+  x = len(fp.readlines())
+y = -1
 def write_to_file():
-    with open("readme",'r') as fp:
-      x = len(fp.readlines())
+
     while lockme.locked():
       continue
     lockme.acquire()
@@ -25,7 +25,7 @@ def write_to_file():
       file.write("\n")
       with open("readme",'r') as ok:
         global y
-        y -= 1 
+        y += 1 
         content = ok.readlines()
         file.write("line " + content[y])
         print(y)
@@ -38,7 +38,7 @@ threads = []
 
 start_time = time.perf_counter()
 
-for i in range(1, 21):
+for i in range(1, 11):
     t = threading.Thread(target=write_to_file)
     threads.append(t)
     t.start()
