@@ -5,7 +5,7 @@ import ray
 DASHBOARD_PORT = os.environ['CDSW_APP_PORT']
 
 # We need to start the ray process with --block else the command completes and the CML Worker terminates
-head_start_cmd = f"!pip3 install pandas ray[tune] aiohttp aiohttp_cors pydantic opencensus async_timeout; ray start --head --block --include-dashboard=true --dashboard-port={DASHBOARD_PORT}"
+head_start_cmd = f"!pip3 install pandas ray[tune] tensorboard gpustat aiohttp aiohttp_cors pydantic opencensus async_timeout; ray start --head --block --include-dashboard=true --dashboard-port={DASHBOARD_PORT}"
 ray_head = cdsw.launch_workers(
     n=1,
     cpu=2,
