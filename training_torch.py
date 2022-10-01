@@ -1,97 +1,155 @@
 import torch
-from torch import nn, optim
-import torch.nn.functional as F
-import torchvision
-import time
 from torchvision import datasets, transforms
 
-EPOCHS = 2
+# Define a transform to normalize the data
+transform = transforms.Compose([transforms.ToTensor(),
+                                transforms.Normalize((0.5,), (0.5,))])
+# Download and load the training data
+trainset = datasets.FashionMNIST('~/.pytorch/F_MNIST_data/', 
+                                 download=True, 
+                                 train=True, 
+                                 transform=transform)
+trainloader = torch.utils.data.DataLoader(trainset, 
+                                          batch_size=64, 
+                                          shuffle=True,num_workers=3,pin_memory=True)
 
-class Net(nn.Module):
-    def __init__(self):
-        super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(1, 20, 5, 1)
-        self.conv2 = nn.Conv2d(20, 50, 5, 1)
-        self.fc1 = nn.Linear(4*4*50, 500)
-        self.fc2 = nn.Linear(500, 10)
+# Download and load the test data
+testset = datasets.FashionMNIST('~/.pytorch/F_MNIST_data/', 
+                                download=True, 
+                                train=False, 
+                                transform=transform)
+testloader = torch.utils.data.DataLoader(testset, 
+                                         batch_size=64, 
+                                         shuffle=True,num_workers=3,pin_memory=True)
 
-    def forward(self, x):
-        x = F.relu(self.conv1(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = F.relu(self.conv2(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = x.view(-1, 4*4*50)
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-        return F.log_softmax(x, dim=1)
+import matplotlib.pyplot as plt
+import numpy as np
 
-def train(model, device, train_loader, optimizer, epoch):
+def imshow(image, ax=None, title=None, normalize=True):
+    if ax is None:
+        fig, ax = plt.subplots()
+    image = image.numpy().transpose((1, 2, 0))
+
+    if normalize:
+        mean = np.array([0.485, 0.456, 0.406])
+        std = np.array([0.229, 0.224, 0.225])
+        image = std * image + mean
+        image = np.clip(image, 0, 1)
+
+    ax.imshow(image)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.tick_params(axis='both', length=0)
+    ax.set_xticklabels('')
+    ax.set_yticklabels('')
+
+    return ax
+  
+image, label = next(iter(trainloader))
+imshow(image[0,:]);
+
+from torch import nn
+
+model = nn.Sequential(nn.Linear(784, 128),
+                      nn.ReLU(),
+                      nn.Linear(128, 64),
+                      nn.ReLU(),
+                      nn.Linear(64, 10),
+                      nn.LogSoftmax(dim=1))
+
+device = torch.device("cuda")
+model.to(device)
+from torch import optim
+
+criterion = nn.NLLLoss()
+optimizer = optim.SGD(model.parameters(),
+                      lr=0.003)
+
+
+epoch = 1
+
+%%time
+#while True:
+for epoch in range(1, 10):
+    running_loss = 0
     model.train()
-    for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = data.to(device), target.to(device)
+    for images, labels in trainloader:
+        # Flatten MNIST images into a 784 long vector
+        images, labels = images.to(device), labels.to(device)
+        images = images.view(images.shape[0], -1)
+        
         optimizer.zero_grad()
-        output = model(data)
-        loss = F.nll_loss(output, target)
+
+        output = model(images)
+  
+        loss = criterion(output, labels)
         loss.backward()
         optimizer.step()
-        if batch_idx % 10 == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.item()))
+        
+        running_loss += loss.item()
+        
+    training_loss = running_loss/len(trainloader)
+    print("Epoch, Loss:    {:2}, {:1.3}".format(epoch, training_loss))
+    epoch += 1
+    
+    #if training_loss < 0.4:
+    #    break
+        
+%matplotlib inline
+import matplotlib.pyplot as plt
+import numpy as np
 
-def test(model, device, test_loader):
-    model.eval()
-    test_loss = 0
-    correct = 0
-    with torch.no_grad():
-        for data, target in test_loader:
-            data, target = data.to(device), target.to(device)
-            output = model(data)
-            test_loss += F.nll_loss(output, target, reduction='sum').item() # sum up batch loss
-            pred = output.argmax(dim=1, keepdim=True) # get the index of the max log-probability
-            correct += pred.eq(target.view_as(pred)).sum().item()
+def view_classify(img, ps):
+    ps = ps.data.numpy().squeeze()
 
-    test_loss /= len(test_loader.dataset)
+    fig, (ax1, ax2) = plt.subplots(figsize=(6,9), ncols=2)
+    ax1.imshow(img.resize_(1, 28, 28).numpy().squeeze())
+    ax1.axis('off')
+    ax2.barh(np.arange(10), ps)
+    ax2.set_aspect(0.1)
+    ax2.set_yticks(np.arange(10))
+    ax2.set_yticklabels(['T-shirt/top',
+                        'Trouser',
+                        'Pullover',
+                        'Dress',
+                        'Coat',
+                        'Sandal',
+                        'Shirt',
+                        'Sneaker',
+                        'Bag',
+                        'Ankle Boot'], size='small');
+    ax2.set_title('Class Probability')
+    ax2.set_xlim(0, 1.1)
 
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(test_loader.dataset),
-        100. * correct / len(test_loader.dataset)))
+    plt.tight_layout()
 
+#print("Models layer keys: \n\n", model.state_dict().keys())
+#torch.save(model.state_dict(), 'model.pth')
+#state_dict = torch.load('model.pth')
+#print(state_dict.keys())
+#model.load_state_dict(state_dict)
 
 def main():
-  
-    start = time.time()    
-    print("PyTorch version:", torch.__version__)
-    print("Torchvision version:", torchvision.__version__)
+  dataiter = iter(testloader)
+  for _ in range(10):
+    device = torch.device("cpu")
+    images, labels = dataiter.next()
+    img = images[0]
 
-    device = torch.device("cuda")
-    print("Using Device: ", device)
+    # Convert 2D image to 1D vector
+    img = img.resize_(1, 784)
 
-    train_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('data', train=True, download=True,
-                       transform=transforms.Compose([
-                           transforms.ToTensor(),
-                           transforms.Normalize((0.1307,), (0.3081,))
-                       ])),
-        batch_size=128, shuffle=True,num_workers=3,pin_memory=True)
-    test_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('data', train=False, download=True,transform=transforms.Compose([
-                           transforms.ToTensor(),
-                           transforms.Normalize((0.1307,), (0.3081,))
-                       ])),
-        batch_size=128, shuffle=True,num_workers=3,pin_memory=True)
+    # Turn off gradients to speed up this part
+    with torch.no_grad():
+        model.to(device)
+        logps = model(img)
+    # Output of the network are log-probabilities, need to take exponential for probabilities
+    ps = torch.exp(logps)
 
-
-    model = Net().to(device)
-    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-
-    for epoch in range(1, EPOCHS + 1):
-        train(model, device, train_loader, optimizer, epoch)
-        test(model, device, test_loader)
-
-    end = time.time()
-    print("Time Taken to Train Using " + str(device) +" :{}".format(end - start))
+    # Plot the image and probabilities
+    view_classify(img.resize_(1, 28, 28), ps)
     
 if __name__ == "__main__":  
     main()
-
