@@ -1,17 +1,22 @@
 import torch
+import time
 from torchvision import datasets, transforms
+import matplotlib.pyplot as plt
+import numpy as np
+from torch import optim
+from torch import nn
 
-# Define a transform to normalize the data
-transform = transforms.Compose([transforms.ToTensor(),
-                                transforms.Normalize((0.5,), (0.5,))])
-# Download and load the training data
+# Normalize the data
+transform = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.5,), (0.5,))])
+
+# Load the training data
 trainset = datasets.FashionMNIST('~/.pytorch/F_MNIST_data/', 
                                  download=True, 
                                  train=True, 
                                  transform=transform)
 trainloader = torch.utils.data.DataLoader(trainset, 
                                           batch_size=64, 
-                                          shuffle=True,num_workers=3,pin_memory=True)
+                                          shuffle=True,num_workers=0,pin_memory=True)
 
 # Download and load the test data
 testset = datasets.FashionMNIST('~/.pytorch/F_MNIST_data/', 
@@ -20,10 +25,7 @@ testset = datasets.FashionMNIST('~/.pytorch/F_MNIST_data/',
                                 transform=transform)
 testloader = torch.utils.data.DataLoader(testset, 
                                          batch_size=64, 
-                                         shuffle=True,num_workers=3,pin_memory=True)
-
-import matplotlib.pyplot as plt
-import numpy as np
+                                         shuffle=True,num_workers=0,pin_memory=True)
 
 def imshow(image, ax=None, title=None, normalize=True):
     if ax is None:
@@ -44,13 +46,10 @@ def imshow(image, ax=None, title=None, normalize=True):
     ax.tick_params(axis='both', length=0)
     ax.set_xticklabels('')
     ax.set_yticklabels('')
-
     return ax
   
 image, label = next(iter(trainloader))
 imshow(image[0,:]);
-
-from torch import nn
 
 model = nn.Sequential(nn.Linear(784, 128),
                       nn.ReLU(),
@@ -59,20 +58,18 @@ model = nn.Sequential(nn.Linear(784, 128),
                       nn.Linear(64, 10),
                       nn.LogSoftmax(dim=1))
 
+# Use specific device - CPU or GPU
 device = torch.device("cuda")
 model.to(device)
-from torch import optim
 
 criterion = nn.NLLLoss()
-optimizer = optim.SGD(model.parameters(),
-                      lr=0.003)
+optimizer = optim.SGD(model.parameters(),lr=0.003)
 
+epochcap = 10
 
-epoch = 1
-
-%%time
+start = time.time()    
 #while True:
-for epoch in range(1, 10):
+for epoch in range(1, epochcap):
     running_loss = 0
     model.train()
     for images, labels in trainloader:
@@ -96,10 +93,10 @@ for epoch in range(1, 10):
     
     #if training_loss < 0.4:
     #    break
+end = time.time()
+print("Time Taken to Train Using " + str(device) +" :{}".format(end - start))
         
 %matplotlib inline
-import matplotlib.pyplot as plt
-import numpy as np
 
 def view_classify(img, ps):
     ps = ps.data.numpy().squeeze()
