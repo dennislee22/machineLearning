@@ -42,24 +42,24 @@ def compute_intensive_function(image_in):
     # Edge detection
     edges = cv2.Canny(image_in, 100, 200)
 
-    # Kernel
-    averaging_kernel = np.ones((3, 3), np.float32) / 9
-    filtered_image = cv2.filter2D(image_in, -1, averaging_kernel)
+    # Kernel - slow down the process - IO waiting
+    #averaging_kernel = np.ones((3, 3), np.float32) / 9
+    #filtered_image = cv2.filter2D(image_in, -1, averaging_kernel)
 
     # Gaussian Kernel
-    gaussian_kernel_x = cv2.getGaussianKernel(5, 1)
-    gaussian_kernel_y = cv2.getGaussianKernel(5, 1)
-    gaussian_kernel = gaussian_kernel_x * gaussian_kernel_y.T
-    filtered_image = cv2.filter2D(image_in, -1, gaussian_kernel)
+    #gaussian_kernel_x = cv2.getGaussianKernel(5, 1)
+    #gaussian_kernel_y = cv2.getGaussianKernel(5, 1)
+    #gaussian_kernel = gaussian_kernel_x * gaussian_kernel_y.T
+    #filtered_image = cv2.filter2D(image_in, -1, gaussian_kernel)
 
     # Image contours
-    gray_image = cv2.cvtColor(image_in, cv2.COLOR_BGR2GRAY)
-    ret, thresh = cv2.threshold(gray_image, 127, 255, 0)
+    #gray_image = cv2.cvtColor(image_in, cv2.COLOR_BGR2GRAY)
+    #ret, thresh = cv2.threshold(gray_image, 127, 255, 0)
     # calculate the contours from binary image
-    contours, hierarchy = cv2.findContours(
-        thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
-    )
-    with_contours = cv2.drawContours(image_in, contours, -1, (0, 255, 0), 3)
+    #contours, hierarchy = cv2.findContours(
+    #    thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
+    #)
+    #with_contours = cv2.drawContours(image_in, contours, -1, (0, 255, 0), 3)
     return True
 
 original_stdout = sys.stdout
@@ -68,10 +68,10 @@ start = time.time()
 for image in list_images * 1000:
     # I want to execute a compute intensive step on each image
     compute_intensive_function(image)
-    with open('zzz', 'a') as f:
-      sys.stdout = f # Change the standard output to the file we created.
-      print(psutil.Process().cpu_num())
-      sys.stdout = original_stdout # Reset the standard output to its original value
+#    with open('zzz', 'a') as f:
+#      sys.stdout = f # Change the standard output to the file we created.
+#      print(psutil.Process().cpu_num())
+#      sys.stdout = original_stdout # Reset the standard output to its original value
     
 
 end = time.time()
