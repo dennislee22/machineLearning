@@ -150,8 +150,8 @@ def main():
     view_classify(img.resize_(1, 28, 28), ps)
     
 if __name__ == "__main__":  
-    #image, label = next(iter(trainloader))
-    imshow(image[0,:]);
+    image, label = next(iter(trainloader))
+    #imshow(image[0,:]);
     start = time.time()  
     trainme()
     end = time.time()
