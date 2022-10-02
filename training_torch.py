@@ -1,3 +1,5 @@
+!pip3 install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
+  
 import torch
 import time
 from torchvision import datasets, transforms
@@ -5,6 +7,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from torch import optim
 from torch import nn
+%matplotlib inline
+
+# Use specific device - CPU or GPU
+#device = torch.device("cpu")
+device = torch.device("cuda")
+total_workers_train = 3
+total_workers_test = 0
 
 # Normalize the data
 transform = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.5,), (0.5,))])
@@ -16,7 +25,7 @@ trainset = datasets.FashionMNIST('~/.pytorch/F_MNIST_data/',
                                  transform=transform)
 trainloader = torch.utils.data.DataLoader(trainset, 
                                           batch_size=64, 
-                                          shuffle=True,num_workers=0,pin_memory=True)
+                                          shuffle=True,num_workers=total_workers_train,pin_memory=True)
 
 # Download and load the test data
 testset = datasets.FashionMNIST('~/.pytorch/F_MNIST_data/', 
@@ -25,7 +34,7 @@ testset = datasets.FashionMNIST('~/.pytorch/F_MNIST_data/',
                                 transform=transform)
 testloader = torch.utils.data.DataLoader(testset, 
                                          batch_size=64, 
-                                         shuffle=True,num_workers=0,pin_memory=True)
+                                         shuffle=True,num_workers=total_workers_test,pin_memory=True)
 
 def imshow(image, ax=None, title=None, normalize=True):
     if ax is None:
@@ -47,9 +56,6 @@ def imshow(image, ax=None, title=None, normalize=True):
     ax.set_xticklabels('')
     ax.set_yticklabels('')
     return ax
-  
-image, label = next(iter(trainloader))
-imshow(image[0,:]);
 
 model = nn.Sequential(nn.Linear(784, 128),
                       nn.ReLU(),
@@ -58,18 +64,16 @@ model = nn.Sequential(nn.Linear(784, 128),
                       nn.Linear(64, 10),
                       nn.LogSoftmax(dim=1))
 
-# Use specific device - CPU or GPU
-device = torch.device("cuda")
 model.to(device)
 
 criterion = nn.NLLLoss()
 optimizer = optim.SGD(model.parameters(),lr=0.003)
 
-epochcap = 10
+epochcap = 3
 
-start = time.time()    
-#while True:
-for epoch in range(1, epochcap):
+def trainme():  
+  #while True:
+  for epoch in range(1, epochcap):
     running_loss = 0
     model.train()
     for images, labels in trainloader:
@@ -89,16 +93,13 @@ for epoch in range(1, epochcap):
         
     training_loss = running_loss/len(trainloader)
     print("Epoch, Loss:    {:2}, {:1.3}".format(epoch, training_loss))
-    epoch += 1
-    
+    epoch += 1    
     #if training_loss < 0.4:
     #    break
-end = time.time()
-print("Time Taken to Train Using " + str(device) +" :{}".format(end - start))
-        
-%matplotlib inline
+  
 
 def view_classify(img, ps):
+    
     ps = ps.data.numpy().squeeze()
 
     fig, (ax1, ax2) = plt.subplots(figsize=(6,9), ncols=2)
@@ -149,4 +150,11 @@ def main():
     view_classify(img.resize_(1, 28, 28), ps)
     
 if __name__ == "__main__":  
+    #image, label = next(iter(trainloader))
+    imshow(image[0,:]);
+    start = time.time()  
+    trainme()
+    end = time.time()
     main()
+    print("Time Taken to Train Using " + str(device) +" :{}".format(end - start))
+  
