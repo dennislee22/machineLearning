@@ -23,12 +23,11 @@ def write_to_file():
       with open("input",'r') as ok:
         global y
         content = ok.readlines()
-        file.write("write " + content[y])
-        print(y)
+        file.write(content[y])
+        #print(y)
         y += 1
       file.write("\n")
       file.close()
-
 
 if __name__ == "__main__":
     start_time = time.perf_counter()
