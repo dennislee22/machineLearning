@@ -11,7 +11,7 @@ y = 0
 
 def write_to_file():
     with open("output", "a+") as file:
-      file.write("current threads:" + str(threading.current_thread()))
+      file.write("current thread:" + str(threading.current_thread()))
       file.write("\n")
       file.write("current pid:" + str(os.getpid()))
       file.write("\n")
