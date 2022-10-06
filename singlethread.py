@@ -6,6 +6,7 @@ import threading
 open('output', 'w').close()    
 with open("input",'r') as fp:
   x = len(fp.readlines())
+fp.close()
 y = 0
 
 def write_to_file():
@@ -18,7 +19,7 @@ def write_to_file():
       file.write("\n")
       file.write("CPU number:" + str(psutil.Process().cpu_num()))
       file.write("\n")
-      #time.sleep(3)
+      #time.sleep(1)
       with open("input",'r') as ok:
         global y
         content = ok.readlines()
@@ -27,7 +28,8 @@ def write_to_file():
         y += 1
       file.write("\n")
       file.close()
-      
+
+
 if __name__ == "__main__":
     start_time = time.perf_counter()
     for i in range(y, x):
