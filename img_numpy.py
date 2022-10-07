@@ -52,7 +52,6 @@ def tamper_numpy_slow():
     print("Values of original image:\n",ori_img_array[0:1,0:3])    
     print("\nValues of tampered image:\n",numpyraw[0:1,0:3])
     plt.imshow(numpyraw)
-    return True
 
 def cv2_multithread_npy():
     edges = cv2.Canny(ori_img_array, 100, 200)
