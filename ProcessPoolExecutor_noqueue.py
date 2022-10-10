@@ -11,8 +11,6 @@ y = 0
 
 def write_to_file():
     with open("output", "a+") as file:
-      file.write("current thread:" + str(threading.current_thread()))
-      file.write("\n")
       file.write("current pid:" + str(os.getpid()))
       file.write("\n")
       file.write("total threads:" + str(psutil.Process().num_threads()))
@@ -27,6 +25,7 @@ def write_to_file():
         y += 1
       file.write("\n")
       file.close()
+
 
 if __name__ == "__main__":
     start_time = time.perf_counter()
