@@ -1,45 +1,37 @@
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import psutil
-import threading
 import os
 import time
-import random
-import numpy as np
 
 open('output', 'w').close()    
-with open("readme",'r') as fp:
+with open("input",'r') as fp:
   x = len(fp.readlines())
+fp.close()
+y = 0
 
-def createList(r1, r2):
-    return np.arange(r1, r2)
-  
-z = createList(1, x)
-  
-def write_to_file(lineno):    
+def write_to_file():
     with open("output", "a+") as file:
-        file.write("current threads:" + str(threading.current_thread()))
-        file.write("\n")
-        file.write("current pid:" + str(os.getpid()))
-        file.write("\n")
-        file.write("total threads:" + str(psutil.Process().num_threads()))
-        file.write("\n")
-        file.write("CPU number:" + str(psutil.Process().cpu_num()))
-        file.write("\n")
-        sleeptime = random.randint(1, 10)
-        #time.sleep(sleeptime)
-        with open("readme",'r') as ok:
-          global y
-          #y += 0
-          content = ok.readlines()
-          file.write("line " + content[lineno])
-          #print(sleeptime, lineno)
-          
-        file.write("\n")
-        file.close()
+      file.write("current thread:" + str(threading.current_thread()))
+      file.write("\n")
+      file.write("current pid:" + str(os.getpid()))
+      file.write("\n")
+      file.write("total threads:" + str(psutil.Process().num_threads()))
+      file.write("\n")
+      file.write("CPU number:" + str(psutil.Process().cpu_num()))
+      file.write("\n")
+      with open("input",'r') as ok:
+        global y
+        content = ok.readlines()
+        file.write(content[y])
+        #print(y)
+        y += 1
+      file.write("\n")
+      file.close()
 
 if __name__ == "__main__":
-    start = time.time()
-    with ProcessPoolExecutor(max_workers=10) as executor:
-        futures = executor.map(write_to_file,z)
-    end = time.time()
-    print("Time Taken with Multiprocessing:{}".format(end - start))
+    start_time = time.perf_counter()
+    with ProcessPoolExecutor(max_workers=1) as executor:
+        futures = [executor.submit(write_to_file) for i in range(x)]
+    end_time = time.perf_counter()  
+    execution_time = end_time - start_time  
+    print(f"\nJob Starts: {start_time}\nJob Ends: {end_time}\nTotals Execution Time:{execution_time:0.2f} seconds.")
