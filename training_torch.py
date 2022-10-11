@@ -1,5 +1,3 @@
-!pip3 install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
-  
 import torch
 import time
 from torchvision import datasets, transforms
@@ -13,7 +11,7 @@ from torch import nn
 #device = torch.device("cpu")
 device = torch.device("cuda")
 total_workers_train = 3
-total_workers_test = 0
+total_workers_test = 3
 
 # Normalize the data
 transform = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.5,), (0.5,))])
