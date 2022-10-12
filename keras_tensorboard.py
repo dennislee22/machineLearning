@@ -1,5 +1,6 @@
 import keras
 import time
+import datetime
 from keras.utils.np_utils import to_categorical
 from keras.datasets import mnist
 from keras import models
@@ -53,11 +54,14 @@ earlystopping = callbacks.EarlyStopping(monitor ="val_loss",
 										mode ="min", patience = 5,
 										restore_best_weights = True)
 
+log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+
 start = time.time()
 #with tf.device('/CPU:0'):
 with tf.device('/GPU:0'):
   history = model.fit(partial_images, partial_labels, batch_size = 128,
 					epochs = 5, validation_data =(val_images, val_labels),
-					callbacks =[earlystopping])
+					callbacks =[tensorboard_callback])
 end = time.time()
 print("Time Taken: {}".format(end - start))
