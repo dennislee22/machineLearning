@@ -8,7 +8,6 @@ from keras import layers
 import tensorflow as tf
 print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
-
 # Loading data
 (train_images, train_labels), (test_images, test_labels)= mnist.load_data()
 
@@ -55,7 +54,8 @@ earlystopping = callbacks.EarlyStopping(monitor ="val_loss",
 										restore_best_weights = True)
 
 start = time.time()
-with tf.device('/CPU:0'):
+#with tf.device('/CPU:0'):
+with tf.device('/GPU:0'):
   history = model.fit(partial_images, partial_labels, batch_size = 128,
 					epochs = 5, validation_data =(val_images, val_labels),
 					callbacks =[earlystopping])
